@@ -64,7 +64,7 @@ class leodb:
         if result == 1 and success == True:
             stdout.write("[LOG]: db created Successfully\n")
             return 1
-        if result == -1 and success == True:
+        if result == -1 and success == False:
             stdout.write("[ERROR]: db was not created\n")
             return -1
 
@@ -153,6 +153,11 @@ class leodb:
         while "" in ds_data_list:
             ds_data_list.pop(ds_data_list.index(""))
         # Generating the output.
+        if data == "":
+            new_return_ls = [ds_col_list]
+            for record in ds_data_list:
+                new_return_ls.append(self.__string_to_list(record, "%#%"))
+            return new_return_ls
         return_ls = []
         for i in range(len(ds_data_list)):
             count = 0
@@ -167,7 +172,7 @@ class leodb:
             self.search_result = return_ls
             return 1
         elif option == 0:
-            new_return_ls = []
+            new_return_ls = [ds_col_list]
             for record in return_ls:
                 new_return_ls.append(self.__string_to_list(record, "%#%"))
             return new_return_ls
@@ -276,16 +281,23 @@ class db_security:
 class db_io:
     # This class serves purpose of Reading & Writing,Too & Fro from the storage.
     def __init__(self, root_path, username, password):
-        self.root_path = f"{root_path}/"
+        self.root_path = f"{root_path}"
         self.username = username
         self.security = db_security(password)
         self.db_path = ""
 
+    def __gen_db_name(self, db_name):
+        self.db_path = self.root_path + \
+            self.security.gen_hash(db_name+self.username) + ".leoDB"
+        if path.exists(self.db_path):
+            return True
+        else:
+            return False
+
     def create_db(self, db_name):
         # This function serves the purpose of selectng te database.
-        self.db_path = self.root_path + \
-            self.security.gen_hash(db_name+self.username)
-        if path.exists(self.db_path):
+        success = self.__gen_db_name(db_name)
+        if success == True:
             return -1, True
         else:
             result = self.write_db("")
@@ -295,9 +307,8 @@ class db_io:
 
     def destroy_db(self, db_name):
         # This function serves the purpose of selectng te database.
-        self.db_path = self.root_path + \
-            self.security.gen_hash(db_name+self.username)
-        if path.exists(self.db_path):
+        success = self.__gen_db_name(db_name)
+        if success == True:
             remove(self.db_path)
             self.db_path = ""
             return 1
@@ -306,16 +317,11 @@ class db_io:
 
     def get_db(self, db_name):
         # This function serves the purpose of selectng te database.
-        self.db_path = self.root_path + \
-            self.security.gen_hash(db_name+self.username)
-        if path.exists(self.db_path):
-            return True
-        else:
-            return False
+        return self.__gen_db_name(db_name)
 
     def read_db(self, db_name):
         # This function serves the purpose of reading and decrypting the data.
-        db_file = open(self.db_path+".leoDB", "r")
+        db_file = open(self.db_path, "r")
         db_data = db_file.read()
         db_file.close()
         if len(db_data) == 0:
@@ -332,12 +338,12 @@ class db_io:
     def write_db(self, data):
         # This function serves the purpose of encrypting and writing the data.
         if len(data) == 0:
-            db_file = open(self.db_path+".leoDB", "w")
+            db_file = open(self.db_path, "w")
             db_file.close()
             return 0
         db_data = self.__deploy_data(data)
         db_data = self.security.e_crypt(db_data)
-        db_file = open(self.db_path+".leoDB", "w")
+        db_file = open(self.db_path, "w")
         db_file.write(db_data)
         db_file.close()
         return 1
