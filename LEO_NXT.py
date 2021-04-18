@@ -1,9 +1,10 @@
 # Importing modules.
-import os
-import base64
-import hashlib
+from os import path, remove
+from sys import stdout
+from base64 import urlsafe_b64encode
+from hashlib import sha512, sha256
 from cryptography.fernet import Fernet
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.hashes import SHA256
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
@@ -58,33 +59,34 @@ class leodb:
         # This function serves the purpose of creating a new DB.
         result, success = self.db_io.create_db(db_name)
         if result == -1 and success == True:
-            print("[WARN]: db already exists")
+            stdout.write("[WARN]: db already exists\n")
             return 0
         if result == 1 and success == True:
-            print("[LOG]: db created Successfully")
+            stdout.write("[LOG]: db created Successfully\n")
             return 1
         if result == -1 and success == True:
-            print("[ERROR]: db was not created")
+            stdout.write("[ERROR]: db was not created\n")
             return -1
 
     def destroy_db(self, db_name):
         # This function serves the purpose of deleting an existing DB.
         result = self.db_io.destroy_db(db_name)
         if result == -1:
-            print("[ERROR]: db not found!")
+            stdout.write("[ERROR]: db not found!\n")
             return -1
         if result == 1:
-            print("[ERROR]: db destroyed successfully")
+            stdout.write("[ERROR]: db destroyed successfully\n")
             return 1
 
     def create(self, table_name, col_list):
         # This function serves the purpose of creating new db
         if self.data == -1:
-            print("[ERROR]: No database selected. Try --> '.get_db()'")
+            stdout.write(
+                "[ERROR]: No database selected. Try --> '.get_db()'\n")
             return -1
         for subdata in self.data:
             if subdata[0] == table_name.lower():
-                print("[ERROR]: Table already exist!")
+                stdout.write("[ERROR]: Table already exist!\n")
                 return -1
         col_list = [col_name.lower() for col_name in col_list]
         self.data.append([table_name.lower(), col_list, []])
@@ -93,14 +95,15 @@ class leodb:
     def destroy(self, table_name):
         # This function serves the purpose of deleting the db
         if self.data == -1:
-            print("[ERROR]: No database selected. Try --> '.get_db()'")
+            stdout.write(
+                "[ERROR]: No database selected. Try --> '.get_db()'\n")
             return -1
         index = -1
         for subdata in self.data:
             if subdata[0] == table_name.lower():
                 index = self.data.index(subdata)
         if index == -1:
-            print("[ERROR]: No such table found")
+            stdout.write("[ERROR]: No such table found\n")
             return -1
         else:
             if index < self.table_index:
@@ -225,7 +228,7 @@ class leodb:
             if subdata != "":
                 new_data = self.__string_to_list(subdata, "::")
                 if len(new_data) != 2:
-                    print("[ERROR]: Invalid data input!")
+                    stdout.write("[ERROR]: Invalid data input!\n")
                     return -1, [], []
                 pro_col_ls.append(new_data[0])
                 pro_data_ls.append(new_data[1])
@@ -245,12 +248,12 @@ class db_security:
     # This class serves purpose of Encrypting & Decrypting the data.
     def __init__(self, password):
         kdf = PBKDF2HMAC(
-            algorithm=hashes.SHA256(),
+            algorithm=SHA256(),
             length=32,
             salt="None Of Your Business Fucker".encode(),
             iterations=100000,
         )
-        key = base64.urlsafe_b64encode(kdf.derive(password.encode()))
+        key = urlsafe_b64encode(kdf.derive(password.encode()))
         self.crypt_obj = Fernet(key)
 
     def e_crypt(self, data):
@@ -282,7 +285,7 @@ class db_io:
         # This function serves the purpose of selectng te database.
         self.db_path = self.root_path + \
             self.security.gen_hash(db_name+self.username)
-        if os.path.exists(self.db_path):
+        if path.exists(self.db_path):
             return -1, True
         else:
             result = self.write_db("")
@@ -294,8 +297,8 @@ class db_io:
         # This function serves the purpose of selectng te database.
         self.db_path = self.root_path + \
             self.security.gen_hash(db_name+self.username)
-        if os.path.exists(self.db_path):
-            os.remove(self.db_path)
+        if path.exists(self.db_path):
+            remove(self.db_path)
             self.db_path = ""
             return 1
         else:
@@ -305,7 +308,7 @@ class db_io:
         # This function serves the purpose of selectng te database.
         self.db_path = self.root_path + \
             self.security.gen_hash(db_name+self.username)
-        if os.path.exists(self.db_path):
+        if path.exists(self.db_path):
             return True
         else:
             return False
@@ -323,7 +326,7 @@ class db_io:
                 db_data = self.__extract_data(db_data)
                 return 1, db_data
             except:
-                print("[ERROR]: No such db exist. Try creating one.")
+                stdout.write("[ERROR]: No such db exist. Try creating one.\n")
                 return -1, []
 
     def write_db(self, data):
