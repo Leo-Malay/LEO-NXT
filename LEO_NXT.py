@@ -268,8 +268,8 @@ class db_security:
 
     def gen_hash(self, data):
         # Function serves the purpose of hashing the data.
-        hash_data = hashlib.sha512(data.encode())
-        d_hash_data = hashlib.sha256(hash_data.hexdigest().encode())
+        hash_data = sha512(data.encode())
+        d_hash_data = sha256(hash_data.hexdigest().encode())
         return d_hash_data.hexdigest()
 
 
