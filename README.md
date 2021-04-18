@@ -1,6 +1,6 @@
-### LEO-NXT <Python-localDB>
+# LEO-NXT <Python-localDB>
 
-# By Malay Bhavsar (LEO-Malay)
+#### By Malay Bhavsar (LEO-Malay)
 
 <p><b>Key Features:</b> Easy to Use, Portable, Secure, Requires Less Storage, Source code under 400 Lines :)</p>
 <p>You may use it directly or integrate with your Python program.</p>
